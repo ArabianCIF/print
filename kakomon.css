@@ -1,0 +1,676 @@
+@charset "utf-8";
+/* CSS Document */
+
+@media all {
+	/* Body */
+	body {
+		background-color: #ffffff;
+		margin-top: 0px;
+		margin-right: 0px;
+		margin-bottom: 0px;
+		margin-left: 0px;
+		font-style: normal;
+		font-weight: 200;
+	}
+
+	#container {
+		width: 100%;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #FFFFFF;
+	}
+
+	/* header */
+	header {
+		width: 100%;
+		background-color: #ffffff;
+	}
+
+	/*.page-header {*/
+	/*width: 894px;*/
+	/*height: 84px;*/
+	/*margin: 0 auto;*/
+	/*}*/
+	#header-top {
+		width: 894px;
+		height: 84px;
+		margin: 0 auto;
+	}
+
+	.passnavi-logo {
+		width: 185px;
+		height: 84px;
+		float: left;
+	}
+
+	.logo-text {
+		width: 400px;
+		height: 68px;
+		margin: 0;
+		padding: 8px;
+		float: left;
+	}
+
+	.text-kakomon-library {
+		padding-top: 20px;
+		font-size: 20px;
+		font-weight: bold;
+	}
+
+	.text-powered-by {
+		font-size: 14px;
+	}
+
+	.one-rows .text-kakomon-library {
+		line-height: 72px;
+	}
+
+	/* header control */
+	.header-control {
+		width: 100%;
+		height: 48px;
+		background-color: #8e8e8e;
+	}
+
+	.header-control-buttons {
+		width: 894px;
+		height: 48px;
+		margin: 0 auto;
+	}
+
+	ul.kakomon-control, ul.page-control {
+		margin: 0;
+		padding: 0;
+	}
+
+	ul.kakomon-control li, ul.page-control li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	ul.kakomon-control li {
+		float: left;
+		margin-left: 8px;
+		width: 109px;
+		height: 38px;
+		margin-top: 10px;
+	}
+
+	ul.page-control li {
+		float: right;
+		margin-top: 9px;
+		margin-right: 8px;
+	}
+
+	/* the pagecontainer */
+	#page-container {
+		/*width: 934px;*/
+		width: 980px;
+		margin: 0 auto;
+	}
+
+	/* the frontpage */
+	#front-page {
+		width: 980px;
+		/*height: 1316px;*/
+		height: 1400px;
+		margin: 0 auto;
+		padding: 0;
+		/*PREVIEW*/
+	}
+
+	#front-page-header {
+		width: 980px;
+		height: 84px;
+		margin: 0 auto;
+		padding: 0;
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	#front-page-body {
+		width: 980px;
+		height: 550px;
+		margin: 0 auto;
+		padding: 0;
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	#front-page-confirm {
+		width: 980px;
+		height: 450px;
+		/*PREVIEW*/
+	}
+
+	#front-page-confirm img {
+		max-height:500px;
+		display: block;
+		margin: 0 auto;
+	}
+
+	#front-page-footer {
+		width: 980px;
+		height: 276px;
+		margin: 0 auto;
+		padding: 0;
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	#frontpage-examinfo {
+		text-align: center;
+		margin-top: 16px;
+		border-bottom: 1px solid #ccc;
+	}
+
+	#front-page .univName {
+		text-align: center;
+		font-weight: bold;
+		font-size: 36pt;
+		line-height: 60pt;
+		height: 60pt;
+		margin: 40px 0 10px 0;
+	}
+
+	#front-page .univNameLarge {
+		text-align: center;
+		font-weight: bold;
+		font-size: 60pt;
+		height: 60pt;
+		margin: 0;
+		padding: 0;
+	}
+
+	#front-page .year {
+		text-align: center;
+		font-weight: bold;
+		font-size: 20pt;
+		margin-bottom: 15px;
+	}
+
+	#front-page .subjectsName {
+		text-align: center;
+		font-weight: bold;
+		/* font-size: 70pt; */
+		font-size: 36pt;
+		margin: 30px 0 10px 0;
+	}
+
+	#front-page .type {
+		text-align: center;
+		font-size: 30pt;
+		margin-bottom: 1px;
+	}
+
+	#front-page .faculty {
+		text-align: center;
+		font-size: 14pt;
+		margin-bottom: 15px;
+	}
+
+	#front-page .exam {
+		text-align: center;
+		font-size: 14pt;
+		margin-bottom: 15px;
+	}
+
+	#frontpage .date {
+		text-align: center;
+		font-size: 14pt;
+		margin-bottom: 15px;
+	}
+
+	#front-page #footer {
+		text-align: left;
+		padding-top: 5px;
+		clear: both;
+		overflow: hidden;
+	}
+
+	#front-page #footer .saitei-text {
+		margin: 0;
+		font-size: 10pt;
+	}
+
+	#front-page #footer #footerLogo {
+		float: right;
+		width: 243px;
+		height: 46px;
+	}
+
+	.invalid_daimon {
+		font-size: 16px;
+		margin: 20px auto;
+		text-align: center;
+		color: #b51c1c;
+		background-color: rgba(231, 31, 25, 0.1);
+		border:1px solid rgba(231, 31, 25, 0.3);
+		border-radius: 8px;
+		padding: 8px;
+	}
+
+	/* each pages */
+	section {
+		width: 980px;
+		margin: 0 auto;
+		display: block;
+	}
+
+	.page-break {
+		page-break-after: always;
+		clear: both;
+	}
+
+	/* sections */
+	/* 4pieces */
+	.layout-four-pieces {
+		/* width: section にて定義 */
+		/*height: 1316px;*/
+		/*border: 2px inset blue;*/
+		clear: both;
+	}
+
+	.layout-four-pieces .rows {
+		width: 980px;
+		/*height: 600px;*/
+		margin: 25px auto;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces .cols {
+		width: 460px;
+		/*height: 600px;*/
+		float: left;
+		/*PREVIEW*/
+	}
+
+	/*.layout-four-pieces .cols img {*/
+		/*max-width: 460px;*/
+		/*max-height: 600px;*/
+	/*}*/
+
+	.section-line {
+		clear: both;
+		/*width: 880px;*/
+		width: 950px;
+		height: 50px;
+		margin: 0 auto;
+		clear:both;
+		/*PREVIEW*/
+	}
+
+	/* 2pieces */
+	.layout-two-pieces {
+		/* width: section にて定義 */
+		/*height: 1316px;*/
+		clear: both;
+	}
+
+	.layout-two-pieces .rows {
+		width: 980px;
+		/*height: 620px;*/
+		margin: 25px auto;
+
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces .cols {
+		width: 980px;
+		/*height: 620px;*/
+		margin: 0 auto;
+		/* subj03, 17, 21の場合の上段寄せ防止 */
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	/*.layout-two-pieces .cols img {*/
+		/*max-width: 930px;*/
+		/*max-height: 620px;*/
+	/*}*/
+
+	/* 1pieces */
+	.layout-one-pieces {
+		/* width: section にて定義 */
+		/*height: 1316px;*/
+		clear: both;
+	}
+
+	.layout-one-pieces .rows {
+		width: 980px;
+		margin: 25px auto;
+		/*PREVIEW*/
+	}
+
+	.layout-one-pieces .cols {
+		width: 980px;
+		/*height: 1300px;*/
+	}
+
+	.cols img {
+		display: block;
+		margin: 0 auto;
+	}
+
+	.subj03 .cols img {
+		display: block;
+		float: right;
+	}
+	.subj17 .cols img {
+		display: block;
+		float: right;
+	}
+	.subj21 .cols img {
+		display: block;
+		float: right;
+	}
+
+	/* footer */
+	.page-footer {
+		clear:both;
+		margin-top: 20px;
+		width: 980px;
+		height: 40px;
+	}
+
+	.page-site-title {
+		/*width: 437px;*/
+		width: 460px;
+		height: 40px;
+		float: left;
+		line-height: 16px;
+		text-align: left;
+		font-size: 10pt;
+	}
+
+	.page-num {
+		width: 60px;
+		height: 40px;
+		float:left;
+		line-height: 16px;
+		font-size: 10pt;
+		text-align: center;
+	}
+
+	.page-examid {
+		width: 460px;
+		height: 40px;
+		line-height: 16px;
+		font-size: 10pt;
+		float:left;
+		text-align: right;
+	}
+
+	.printpage { display: none; }
+	.webpage { display: block; }
+
+	/* エラーページ */
+	.header-passnavi {
+		width: 100%;
+		height: 24px;
+		border-top: 4px solid #ff9211;
+	}
+
+	.footer-passnavi {
+		width: 100%;
+		height: 32px;
+		padding: 8px 0px;
+		color: #FFFFFF;
+		font-size: 10px;
+		text-align: center;
+		background: #353535;
+	}
+
+	button {
+		-webkit-border-radius: 8px;
+		-moz-border-radius: 8px;
+		border-radius: 8px;
+		border-color: #d58512;
+	}
+
+	.btn-warning {
+		color: #fff;
+		background-color: #ff9211;
+		border-color: #eea236;
+
+		height: 55px;
+		line-height: 30px;
+		font-size: 20px;
+		outline: none;
+	}
+	.btn-warning:hover,
+	.btn-warning:focus,
+	.btn-warning:active,
+	.btn-warning.active {
+		color: #fff;
+		background-color: #f0ad4e;
+		border-color: #d58512;
+		-webkit-border-radius: 8px;
+		-moz-border-radius: 8px;
+		border-radius: 8px;
+	}
+
+
+	.errorblock {
+		height: 500px;
+		clear:both;
+	}
+
+	#error-messages {
+		margin-top:50px;
+	}
+
+	.helper_hidden { display: none; }
+}
+
+
+/* Webページ時、印刷系は非表示 */
+/* 印刷時、Webページ系は非表示 */
+@media print {
+	.webpage { display: none; }
+	.printpage { display: block; }
+
+	/* 学部、入試名、試験日、試験時間、問題解答前の確認事項*/
+	table.exam
+	{
+		width: 980px;
+		border:none;
+		margin:0;
+		padding:0;
+	}
+
+	table.exam tr th
+	{
+		font-weight: bold;
+		width: 120px;
+		padding-top: 4px;
+		padding-bottom: 4px;
+		text-align: left;
+		vertical-align: top;
+	}
+
+	table.exam tr td
+	{
+		width: 860px;
+		padding-top: 4px;
+		padding-bottom: 4px;
+		vertical-align: top;
+		text-align: left;
+	}
+
+	#exam_notice {
+		width: 980px;
+		text-align: center;
+	}
+
+	#exam_notice img
+	{
+		max-height:500px;
+	}
+
+	/* logo */
+	.logo-text-library
+	{
+		font-size: 28px;
+		font-weight: bold;
+	}
+
+	/* each layout */
+	/* 4pieces */
+
+	.layout-four-pieces {
+		height: 1400px;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces .section-body {
+		height: 1360px;
+	}
+
+	.layout-four-pieces .rows {
+		width: 980px;
+		margin: 0 auto;
+		min-height: 1px;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces .cols {
+		width: 490px;
+		float: left;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces .cols img {
+		max-width: 460px;
+	}
+
+	.layout-four-pieces.STRICT .rows {
+		width: 980px;
+		height: 650px;
+		margin: 0 auto;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces.STRICT .cols {
+		width: 460px;
+		height: 650px;
+		float: left;
+		/*PREVIEW*/
+	}
+
+	.layout-four-pieces.STRICT .cols img {
+		max-width: 460px;
+		max-height: 650px;
+	}
+
+	.section-line {
+		width: 930px;
+		height: 50px;
+		margin: 0 auto;
+		/*PREVIEW*/
+	}
+
+	/* 2pieces */
+	.layout-two-pieces {
+		height: 1400px;
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces .section-body {
+		height: 1360px;
+	}
+
+	.layout-two-pieces .rows {
+		width: 980px;
+		/*height: 600px;*/
+		margin: 20px auto 0 auto;
+		display:block;
+		float: left;
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces .cols {
+		width: 980px;
+		/*height: 600px;*/
+		margin: 0 auto;
+		display:block;
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces .cols img {
+		/*max-width: 930px;*/
+		max-height: 650px;
+	}
+
+	.layout-two-pieces.STRICT .rows {
+		width: 980px;
+		height: 650px;
+		margin: 20px auto 0 auto;
+		clear: both;
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces.STRICT .cols {
+		width: 980px;
+		height: 650px;
+		margin: 0 auto;
+		/*PREVIEW*/
+	}
+
+	.layout-two-pieces.STRICT .cols img {
+		max-width: 980px;
+		max-height: 650px;
+	}
+
+	/* 1pieces */
+	.layout-one-pieces {
+		height: 1400px;
+		/*PREVIEW*/
+	}
+
+	.layout-one-pieces .section-body {
+		height: 1360px;
+	}
+
+	.layout-one-pieces .rows {
+		width: 980px;
+		margin: 0 auto;
+		max-height: 1400px;
+		/*PREVIEW*/
+	}
+
+	.layout-one-pieces .cols {
+		width: 980px;
+	}
+
+	.layout-one-pieces .cols img {
+
+	}
+
+	.layout-one-pieces.STRICT {
+		width: 980px;
+		max-height: 1400px;
+		margin: 0 auto;
+	}
+
+	.layout-one-pieces.STRICT .rows {
+		width: 980px;
+		max-height: 1400px;
+		margin: 0 auto;
+		/*PREVIEW*/
+	}
+
+	.layout-one-pieces.STRICT .cols {
+		width: 980px;
+	}
+
+	.layout-one-pieces.STRICT .cols img {
+
+	}
+
+	.page-footer {
+		clear: both;
+	}
+}

@@ -1,0 +1,111 @@
+var pastTestDuraAd = {
+    pastTestMetaInfoList: {},
+    loadJson: function (pastTestInfo) {
+        pastTestDuraAd.pastTestMetaInfoList = pastTestInfo
+    },
+    _searchParams: function () {
+        var key = false, res = {}, itm = null;
+        // get the query string without the ?
+        var qs = location.search.substring(1);
+        // check for the key as an argument
+        if (arguments.length > 0 && arguments[0].length > 1)
+            key = arguments[0];
+        // make a regex pattern to grab key/value
+        var pattern = /([^&=]+)=([^&]*)/g;
+        // loop the items in the query string, either
+        // find a match to the argument, or build an object
+        // with key/value pairs
+        while (itm = pattern.exec(qs)) {
+            if (key !== false && decodeURIComponent(itm[1]) === key)
+                return decodeURIComponent(itm[2]);
+            else if (key === false)
+                res[decodeURIComponent(itm[1])] = decodeURIComponent(itm[2]);
+        }
+        return key === false ? res : null;
+
+    },
+    pastTestParseDcode: function (url) {
+        try {
+            var params = this._searchParams(); // (new URL(url)).searchParams;
+            if (params["bpId"]) {
+                var bpid = params["bpId"];
+                if (pastTestDuraAd.pastTestMetaInfoList[bpid] && pastTestDuraAd.pastTestMetaInfoList[bpid].isUseDcode) {
+                    return pastTestDuraAd.pastTestMetaInfoList[bpid].dcode
+                } else {
+                    return undefined;
+                }
+            } else {
+                var paperid = params["paperId"];
+                return "D" + paperid.substring(2, 6);
+            }
+        } catch (e) {
+            return undefined; // 不正なURL等の場合は targetingさせないためundefinedをかえす
+        }
+    },
+    pastTestTargetting: function (url) {
+        var dcode = pastTestDuraAd.pastTestParseDcode(url);
+        if (!dcode || !pastTestDuraAd.pastTestMetaInfoList[dcode]) {
+            return undefined;
+        } else if (pastTestDuraAd.pastTestMetaInfoList[dcode].isUseDcode) {
+            return {"dcode": [dcode]};
+        } else if (pastTestDuraAd.pastTestMetaInfoList[dcode].areaId) {
+            return {"area": [pastTestDuraAd.pastTestMetaInfoList[dcode].areaId]};
+        } else {
+            return undefined
+        }
+    },
+    _pastTestAsyncCallDuraAdUrl: function (keyword, target, max, isAsync) {
+
+        var asyncParam = "";
+        if (!isAsync) {
+            asyncParam = "&isJS=true"
+        }
+
+        var endpoint = "mobile?";
+        if (target["area"]) {
+            endpoint = "multiMobile?max=" + max
+        }
+
+        return "https://obunshaad.durasite.net/A-affiliate2/" + endpoint + "&keyword=" + keyword + "&site=129&target=" + encodeURI(JSON.stringify(target)) + asyncParam;
+    },
+    pastTestAsyncCallDuraAd: function (keyword, num, optRate) {
+        var rate = optRate === undefined ? 100 : optRate;
+        var random = Math.floor(Math.random() * 100);
+        if (random >= rate) {
+            return undefined;
+        }
+
+        var target = pastTestDuraAd.pastTestTargetting(location.href);
+        if (target === undefined) {
+            return;
+        }
+
+        var max = num === undefined ? 2 : num;
+
+        var adUrl = pastTestDuraAd._pastTestAsyncCallDuraAdUrl(keyword, target, max, true);
+
+        $.ajax({
+            url: adUrl,
+            type: "get",
+            success: function (msg) {
+                var segments = [];
+                if (target["dcode"]) {
+                    for (var i = 0; i < max; i++) {
+                        segments.push(msg)
+                    }
+                    segments.push(msg) // 1 more
+                } else {
+                    segments = msg.split("\t");
+                }
+                segments = segments.slice(0, segments.length-1);
+                segments = segments.sort(function(){ return Math.random() - .5});
+                for (var i = 0; i < segments.length ; i++) {
+                    var targetId = "#" + keyword + "_" + i;
+                    targetId = targetId.replace(/\./g, "\\.");
+                    targetId = targetId.replace(/:/g, "\\:");
+                    $(targetId).html(segments[i]);
+                }
+            }
+        });
+    }
+};

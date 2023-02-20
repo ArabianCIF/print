@@ -1,0 +1,80 @@
+@charset "utf-8";
+
+/*==========================================================
+all-clesr
+========================================================== */
+/* body,div,
+dl,dt,dd,ul,ol,li,
+h1,h2,h3,h4,h5,h6,
+pre,form,fieldset,p,blockquote,th,td {
+   margin:0;
+   padding:0;
+} */
+
+/* ----   
+==========================================================
+com
+========================================================== */
+
+/* body {color: #333;letter-spacing: 0;margin: 0px;background-color: #f0f0f0;padding: 0px;text-align: center;background-image: url(../img/main-bg.gif);	background-repeat: repeat-y;background-position: center;}
+a:link {text-decoration: underline;color: #36C;}
+a:visited {text-decoration: underline;color: #36C;}
+a:hover {text-decoration: underline;color: #69F;}
+a img {border:none}
+a:visited img {border:none}
+a {outline:none}
+ */
+/* ----   
+==========================================================
+�{�^����
+========================================================== */
+.text-link {
+	background-image: url(../img/button/bn-textLink.gif);
+	background-repeat: no-repeat;
+	background-position: left center;
+	padding-left: 14px;
+}
+
+/* ----   
+==========================================================
+�󔒓�
+========================================================== */
+.mer-btm10 {margin-bottom: 10px;}
+.mer15 {margin-top: 15px;margin-bottom: 15px;}
+
+/* ----   
+==========================================================
+Layout
+========================================================== */
+#wrapper {padding: 0px;width: 980px; margin:0 auto;}
+#wrapper-inner {padding: 0px;width: 914px;margin-top: 0px;margin-right: auto;margin-bottom: 0px;margin-left: auto;}
+
+
+#wrapper1 {
+	padding: 0px;
+	width: 100%;
+	margin-top: 0px;
+	margin-right: auto;
+	margin-bottom: 0px;
+	margin-left: auto;
+	background-image: url(../img/pdf-contents/leftmenu-bg.gif);
+	background-repeat: repeat-y;
+	background-position: left top;
+}
+
+.clearfix {min-height: 0px;}
+/** html .clearfix{height: 1px;}*/
+.clearfix:after {
+	height: 0;
+	visibility:hidden;
+	content:".";
+	display:block;
+	clear: both;
+}
+/* for MacIE5 \*//*/
+.clearfix {height: auto;overflow: hidden;}
+/* end */
+
+.clear2 {margin: 0px;padding: 0px;clear: both;font-size: 1px;line-height: 0px;}
+
+#wrapper2 {padding: 0px;width: 1024px;margin-top: 0px;margin-right: auto;margin-bottom: 0px;margin-left: auto;}

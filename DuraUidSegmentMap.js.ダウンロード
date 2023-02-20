@@ -1,0 +1,962 @@
+/**
+ * Created by a31041 on 2015/05/29.
+ */
+
+deliveredDcodes = []
+var DuraSegmentMap = function () {
+    this.params = []
+}
+
+isPC = false
+try{
+    var ua = navigator.userAgent.toLowerCase()
+    if (ua.indexOf("iphone") >= 0 || ua.indexOf("ipad") >= 0 || ua.indexOf("ipod") >= 0 || ua.indexOf("android") >= 0){
+        isPC = false;
+    }else{
+        isPC = true
+    }
+}catch(e){
+    isPC = false
+}
+
+
+Array.prototype.ac_shuffle = function () {
+    return this.map(function (a) {
+        return [a, Math.random()]
+    })
+        .sort(function (a, b) {
+            return a[1] - b[1]
+        })
+        .map(function (a) {
+            return a[0]
+        });
+}
+
+var segmentSessionConfig = [{
+    "target": "toyo_ss_rikei",
+    "univcodes": ["2930", "3050", "3120", "2710", "2260", "2850", "2700", "2880", "2860", "2320", "3080", "3160", "2390", "2680", "2420", "3210", "3190", "3100", "2770", "2450", "3250"]
+}, {
+    "target": "toyo_ss_bunkei",
+    "univcodes": ["2930", "3050", "2260", "3120", "3160", "2430", "2590", "3130", "3190", "2700", "3100", "2400", "2680", "2620", "2070", "2710", "3170", "2470", "2420", "2540", "2660"]
+}]
+
+DuraSegmentMap.TrackingParam = function (paramObj) {
+    this.paramObj = paramObj;
+}
+
+/**
+ * セグメント情報を1st party cookieにセットするコールバック用関数
+ *
+ * Cookie: __duraSegments => セグメント情報 90日有効
+ * Cookie: __duraSegUpdatedTime => 最終セグメント更新時間
+ * @param segment
+ */
+DuraSegmentMap.prototype.updateSegment = function (segment) {
+    var isOptout = this.readCookie("isOptOut")
+    if ("true" != isOptout) {
+        // セグメント最終更新時間set
+        this.writeCookie("__duraSegUpdatedTime", (new Date().getTime()), 90)
+        this.writeCookie("__duraSegments", segment, 90)
+    } else {
+        this.writeCookie("__duraSegments", "[]", 90)
+    }
+}
+
+DuraSegmentMap.prototype.writeCookie = function (name, value, expireDay) {
+    var d = new Date()
+    d.setTime(new Date().getTime() + expireDay * 24 * 3600 * 1000)
+    var expireDate = d.toGMTString()
+    document.cookie = name + "=" + value + ";expires=" + expireDate + ";path=/";
+}
+
+DuraSegmentMap.prototype.bunruiSessionTargetting = function () {
+    var dcode = String(this.parseDcode())
+    if (dcode == "")return;
+    //console.log("come 0")
+    if (typeof d_gakubu === "undefined" || d_gakubu == "")return;
+    //console.log("d_gakubu is " + d_gakubu)
+    //console.log("come 1")
+    if (typeof ds18bunruiMaster == "undefined")return;
+    var key = "D" + dcode + "_" + d_gakubu
+    //console.log("key is " + key)
+    if (typeof ds18bunruiMaster[key] == "undefined" || ds18bunruiMaster[key] == null) return;
+    //console.log("come 3")
+    var master = ds18bunruiMaster[key]
+    //console.log("master = " + JSON.stringify(master))
+
+
+    var sessionTargetting = this.readCookie("__dura_bunrui_ssTgt")
+    var bunruiUserData = {}
+    try {
+        bunruiUserData = JSON.parse(sessionTargetting)
+    } catch (e) {
+    }
+
+    //console.log("come4")
+    for (i=0;i<master.length;i++) {
+        try {
+
+            var data = master[i]
+            var bunrui = data["bunrui"]
+            var rate = parseFloat(data["rate"])
+            if (typeof bunruiUserData[bunrui] == "undefined") {
+                bunruiUserData[bunrui] = Math.log(rate * 100)
+            } else {
+                bunruiUserData[bunrui] = bunruiUserData[bunrui] + Math.log(rate * 100)
+            }
+        } catch (e) {
+        }
+    }
+    //console.log("debug "+JSON.stringify(bunruiUserData))
+    this.writeCookie("__dura_bunrui_ssTgt", JSON.stringify(bunruiUserData), 90)
+    //console.log("done")
+
+}
+
+DuraSegmentMap.prototype.maxBunrui = function (){
+    var sessionTargetting = this.readCookie("__dura_bunrui_ssTgt")
+    var bunruiUserData = {}
+    try {
+        bunruiUserData = JSON.parse(sessionTargetting)
+    } catch (e) {
+    }
+    var shuffledBunruiUserData = Object.keys(bunruiUserData).ac_shuffle()
+    var max = {"key":"dumy", "value":0.0}
+    for(i = 0; i < shuffledBunruiUserData.length; i++) {
+        var key = shuffledBunruiUserData[i]
+        if (max.value < bunruiUserData[key]){
+            max.key = key
+            max.value = bunruiUserData[key]
+        }
+    }
+
+    if (max.key != "dumy"){
+        return max.key
+    }else {
+        return undefined
+    }
+}
+
+DuraSegmentMap.prototype.gakubuTargetting = function () {
+    var dcode = String(this.parseDcode())
+    if (dcode == "")return;
+    dcode = "D" + dcode
+    var gakubuTargetting = this.readCookie("__dura_GakubuTargets")
+    try{
+        fac_id = ""
+        if (_cosmi_params[0].action_data.indexOf("k_department_id") >= 0) {
+            fac_id = _cosmi_params[0].action_data.replace(/^.*k_department_id\./, "").replace(/\-.*$/, "")
+        }else {
+            return;
+        }
+
+        var gakubuDatas = []
+        if (gakubuTargetting != ""){
+            gakubuDatas = JSON.parse(gakubuTargetting)
+        }
+        if (gakubuDatas.indexOf(dcode+"_"+fac_id) >= 0) {
+            gakubuDatas.splice(gakubuDatas.indexOf(dcode+"_"+fac_id), 1)
+            gakubuDatas.push(dcode+"_"+fac_id)
+        } else {
+            gakubuDatas.push(dcode+"_"+fac_id)
+        }
+        if (gakubuDatas.length > 20) {
+            gakubuDatas = gakubuDatas.slice(gakubuDatas.length - 20, gakubuDatas.length)
+        }
+        var isOptout = this.readCookie("isOptOut")
+        if ("true" != isOptout) {
+            this.writeCookie("__dura_GakubuTargets", JSON.stringify(gakubuDatas), 30)
+        } else {
+            this.writeCookie("__dura_GakubuTargets", "[]", 30)
+        }
+
+    }catch (e){
+        console.log(e)
+    }
+
+}
+
+DuraSegmentMap.prototype.sessionTargetting = function () {
+//var segmentSessionConfig=[{"target":"toyo_session_rikei","univcodes":["2910","3120"]} , {"target":"toyo_session_bunkei","univcodes":["2910","3120"]},{"target":"toyo_session_sonota","univcodes":["2910","3120"]}]
+    var dcode = String(this.parseDcode())
+    if (dcode == "")return;
+    dcode = "st_D" + dcode
+    var sessionTargetting = this.readCookie("__dura_sessionTargets2")
+    try {
+        var dcodes = JSON.parse(sessionTargetting)
+        if (dcodes.indexOf(dcode) >= 0) {
+            dcodes.splice(dcodes.indexOf(dcode), 1)
+            dcodes.push(dcode)
+        } else {
+            dcodes.push(dcode)
+        }
+        if (dcodes.length > 20) {
+            dcodes = dcodes.slice(dcodes.length - 20, dcodes.length)
+        }
+        var isOptout = this.readCookie("isOptOut")
+        if ("true" != isOptout) {
+            this.writeCookie("__dura_sessionTargets2", JSON.stringify(dcodes), 30)
+        } else {
+            this.writeCookie("__dura_sessionTargets2", "[]", 30)
+        }
+    } catch (e) {
+        var isOptout = this.readCookie("isOptOut")
+        if ("true" != isOptout) {
+            this.writeCookie("__dura_sessionTargets2", JSON.stringify([dcode]), 30)
+        } else {
+            this.writeCookie("__dura_sessionTargets2", "[]", 30)
+        }
+    }
+
+}
+/*
+ DuraSegmentMap.prototype.asyncCallDuraADWithTargetting = function (keyword, num) {
+ this.asyncCallDuraADWithTargetting(keyword, num, 100,false);
+ }
+ */
+
+
+DuraSegmentMap.prototype.allocateNetapply = function (isRandomPickup) {
+
+    var randomPickupStr = isRandomPickup === false ? "" : "&randomPickup=1";
+    var ouid = this.readCookie("o_uid")
+
+    var dcodeList =  jQuery.makeArray($("p[data-param-dcode]").filter(".clip.off.default").map(function (a, b) {
+        return b.getAttribute("data-param-dcode")
+    }));
+    dcodeList = dcodeList.concat(jQuery.makeArray($("div[data-param-dcode]").filter(".btn-area.btn-univ_set").map(function (a, b) {
+        return b.getAttribute("data-param-dcode")})));
+    var arry = dcodeList.filter(function (i) {
+        return deliveredDcodes.indexOf(i) < 0
+    })
+
+    var keywords = arry.map(function (i) {
+        return "netApply_" + i
+    }).join(",")
+    $.get("https://obunshaad.durasite.net/A-affiliate2/multiMobile?max=20&site=129&ruid=" + ouid + randomPickupStr + "&keywords=" + keywords + "&isJS=false&encoding=UTF-8&isWithoutDuplicateCampaign=true", function (data) {
+        if (data.indexOf("dcode") < 0) {
+            //console.log("no dcode in creatives");
+            return
+        } else {
+            //console.log("dcode exist in creatives")
+        }
+        var creatives = data.split("\t")
+        var creativeJsons = creatives.map(function (a, b) {
+            return a == "" ? {} : JSON.parse(a);
+        })
+        creativeJsons.map(function (a, b) {
+            $(".btn-univ_set").filter(function (i) {
+                return $(this).attr("data-param-dcode") == a.dcode
+            }).children("ul").append(a.creative)
+        });
+        deliveredDcodes = deliveredDcodes.concat(arry)
+    });
+
+}
+
+
+DuraSegmentMap.prototype.callDuraADWithGakubuTarget = function (optRate, isRandomPickup) {
+
+    var randomPickupStr = isRandomPickup === false ? "" : "&randomPickup=1";
+
+    // optRateに応じて広告を出す　（レートを下回った場合は広告そのものを出さない) 省略した場合は100%
+    var rate = optRate === undefined ? 100 : optRate
+    var random = Math.floor(Math.random() * 100);
+    if (random >= rate) {
+        return;
+    }
+
+    this.gakubuTargetting()
+    var isSSL = document.location.protocol == "https:"
+
+    var ruid = this.readCookie("__duraid").replaceAll("\"","")
+    var kuidParam = ""
+    if (ruid === undefined || ruid == null || ruid == "") {
+        kuidParam = ""
+    } else {
+        kuidParam = "&kuid=" + ruid
+    }
+
+    var gakubuDatas = this.readCookie("__dura_GakubuTargets")
+
+    if (gakubuDatas != "") {
+        s_segments = JSON.parse(gakubuDatas)
+        // フィルタ処理（サービス中の広告枠か? 処理は省略)
+        if (typeof gakubuMaster === "undefined"){
+            gakubuMaster={}
+        }
+        s_segments = s_segments.filter(function(a,b){return gakubuMaster[a]})
+        if (s_segments.length > 0){
+            keyword = s_segments[Math.floor( Math.random() * s_segments.length )]
+        }
+    }
+
+    // キーワードが存在しない場合　またはセッションにデータが無い場合
+    if (typeof keyword === "undefined"  || keyword == "" ||  typeof gakubuMaster === "undefined" || gakubuMaster[keyword] != true ) {
+        // マッチしながった場合　または　該当広告枠がサービス中deない場合
+        if (isPC) {
+            this.callDuraADWithTargetting("PC_daigaku_targeting")
+            return
+        } else {
+            this.callDuraADWithTargetting("SP_daigaku_targeting")
+            return
+        }
+    }
+
+    noCacheParam = Math.random() * 10000000000;
+    ruaid = ""
+    var ouid = this.readCookie("o_uid")
+    /*
+     if (isPC && window.navigator.userAgent != undefined && window.navigator.userAgent != null) {
+     if (window.navigator.userAgent.indexOf("Android") >= 0) {
+     ruaid = "&rua=ATablet"
+     } else if (window.navigator.userAgent.indexOf("iPad") >= 0) {
+     ruaid = "&rua=iTablet"
+     }
+     } else {
+     ruaid = ""
+     }
+     */
+
+
+    if (isSSL == false) {
+        document.write('<scr' + 'ipt type="text/javascript" src="http://obunshaad.durasite.net/A-affiliate2/mobile?site=129&ruid=' + ouid + randomPickupStr + '&keyword=' + keyword + '&isJS=true&encoding=UTF-8'  + kuidParam + "&ksegments=&"  + ruaid + '&ord=' + noCacheParam + '"></scr' + 'ipt>');
+    } else {
+        document.write('<scr' + 'ipt type="text/javascript" src="https://obunshaad.durasite.net/A-affiliate2/mobile?site=129&ruid=' + ouid + randomPickupStr + '&keyword=' + keyword + '&isJS=true&encoding=UTF-8' + kuidParam + "&ksegments=&"  + ruaid + '&ord=' + noCacheParam + '"></scr' + 'ipt>');
+    }
+}
+
+// HPLINK
+DuraSegmentMap.prototype.asyncCallTypeA = function (site) {
+
+    var isAvailable = function (msg) {
+        return msg.length > 10;
+    };
+    var ouid = this.readCookie("o_uid")
+
+    var dcode = String(this.parseDcode());
+    var targettingParam = '{"dcode":["D' + dcode + '"]}';
+    var url = 'https://obunshaad.durasite.net/A-affiliate2/mobile?keyword=PS_hplink_a_top&ruid=' + ouid + '&site=' + site + '&target=' + targettingParam;
+
+    $.ajax({
+        url: url,
+        type: "get",
+        success: function (msg) {
+            if (isAvailable(msg)) {
+                $("#PS_hplink_a_top").html(msg);
+                $("#PS_hplink_a_modal").html(msg);
+
+                // 各 エリアをdisplay: blockに
+                $("#PS_hplink_a_top").show();
+                $("#PS_hplink_modal_trigger").show();
+                $("#PS_hplink_a_modal").show();
+
+            }
+        }
+    });
+
+    var bottomUrl = 'https://obunshaad.durasite.net/A-affiliate2/mobile?keyword=PS_hplink_a_bottom&ruid=' + ouid + '&site=' + site + '&target=' + targettingParam;
+
+
+    $.ajax({
+        url: bottomUrl,
+        type: "get",
+        success: function (msg) {
+            if (isAvailable(msg)) {
+                $("#PS_hplink_a_bottom").html(msg);
+                $("#PS_hplink_a_bottom").show();
+
+            }
+        }
+    });
+};
+
+DuraSegmentMap.prototype.asyncCallTypeB = function (keyword, site) {
+
+    var isAvailable = function (msg) {
+        return msg.length > 10;
+    };
+    var ouid = this.readCookie("o_uid")
+
+    var dcode = String(this.parseDcode());
+    var targettingParam = '{"dcode":["D' + dcode + '"]}';
+    var url = 'https://obunshaad.durasite.net/A-affiliate2/mobile?keyword=' + keyword + '&ruid=' + ouid + '&site=' + site + '&target=' + targettingParam;
+
+    $.ajax({
+        url: url,
+        type: "get",
+        success: function (msg) {
+
+            if (isAvailable(msg)) {
+                $('#' + keyword).html(msg);
+                $('#' + keyword + '_modal').html(msg);
+
+                // 各 エリアをdisplay: blockに
+                $('#' + keyword).show();
+                $('#' + keyword + '_modal').show();
+                $("#PS_hplink_b_modal").show();
+                $("#PS_hplink_b").show();
+
+            } else {
+                $('#' + keyword).remove();
+                $('#' + keyword + '_modal').remove();
+            }
+        }
+    });
+};
+
+DuraSegmentMap.prototype.asyncCallTypeC = function (keyword, site) {
+
+    var isAvailable = function (msg) {
+        return msg.length > 10;
+    };
+    var ouid = this.readCookie("o_uid")
+
+    var dcode = String(this.parseDcode());
+    var targettingParam = '{"dcode":["D' + dcode + '"]}';
+    var url = 'https://obunshaad.durasite.net/A-affiliate2/mobile?keyword=' + keyword + '&ruid=' + ouid + '&site=' + site + '&target=' + targettingParam;
+
+    $.ajax({
+        url: url,
+        type: "get",
+        success: function (msg) {
+
+            if (isAvailable(msg)) {
+                $('#' + keyword).html(msg);
+                $('#' + keyword + '_modal').html(msg);
+
+                // 各 エリアをdisplay: blockに
+                $('#' + keyword).show();
+                $('#' + keyword + '_modal').show();
+
+                $('#PS_hplink_c_body_modal').show();
+
+            }
+        }
+    });
+};
+
+
+
+DuraSegmentMap.prototype.asyncCallDuraADWithTargetting = function (keyword, num, optRate, isWithoutDuplicateCampaign, isAppendElements) {
+
+    // defaultはキャンペーンの重複除外
+    if (isWithoutDuplicateCampaign === undefined) {
+        isWithoutDuplicateCampaign = true
+    }
+
+    if (isAppendElements === undefined) {
+        isAppendElements = true
+    }
+
+// optRateに応じて広告を出す　（レートを下回った場合は広告そのものを出さない) 省略した場合は100%
+    var rate = optRate === undefined ? 100 : optRate
+    var random = Math.floor(Math.random() * 100);
+    if (random >= rate) {
+        return;
+    }
+
+    this.bunruiSessionTargetting()
+    this.sessionTargetting()
+    this.gakubuTargetting()
+
+    var isSSL = document.location.protocol == "https:"
+    egmentStr = this.readCookie("__duraSegments")
+    var segments = undefined
+    var sessionTargetting = this.readCookie("__dura_sessionTargets2")
+    var ruid = this.readCookie("__duraid").replaceAll("\"","")
+    var kuidParam = ""
+    if (ruid === undefined || ruid == null || ruid == "") {
+        kuidParam = ""
+    } else {
+        kuidParam = "&kuid=" + ruid
+    }
+    var segmentStr = this.readCookie("__duraSegments")
+    try {
+
+        //console.log(segmentStr)
+        if (segmentStr != "") {
+            segments = JSON.parse(segmentStr)
+        } else {
+            segments = []
+        }
+        //console.log("segment="+ JSON.stringify(segments))
+        //console.log("s_segment="+ sessionTargetting)
+        if (sessionTargetting != "") {
+            s_segments = JSON.parse(sessionTargetting)
+            //console.log("s_segment2="+ s_segments)
+            segments = segments.concat(s_segments)
+            //console.log("segment="+ JSON.stringify(segments))
+        }
+    } catch (e) {
+
+	    console.log(e)
+        segments = undefined
+    }
+    var targettingParam = encodeURIComponent(this.toDuraTargetParam(segments))
+    var ksegParam = encodeURIComponent(this.toKsegments(segments))
+
+    noCacheParam = Math.random() * 10000000000;
+    // 検索ターゲッティングを広告枠で代用
+    var keywords = []
+    if (keyword == "PS_kensaku") {
+        try {
+            var searchSeg = this.readCookie("__duraSearchSeg")
+
+            if (searchSeg !== undefined && searchSeg != "") {
+                searchSeg = JSON.parse(searchSeg)
+                if (searchSeg["T1_"] != undefined) {
+                    keywords.push("PS_kensaku_T1_1");
+                }
+                if (searchSeg["T6_"] != undefined) {
+                    keywords.push("PS_kensaku_T6_1");
+                }
+                if (searchSeg["T2_"] != undefined) {
+                    var data = searchSeg["T2_"].ac_shuffle()
+                    for (i = 0; i < data.length; i++) {
+                        if (keywords.length < 20 && dsT2Master["PS_kensaku_T2_" + data[i]] == "true") {
+                            keywords.push("PS_kensaku_T2_" + data[i]);
+                        }
+                    }
+                }
+                if (searchSeg["T3_"] != undefined) {
+                    var data = searchSeg["T3_"].ac_shuffle()
+                    for (i = 0; i < data.length; i++) {
+                        if (keywords.length < 20) {
+                            keywords.push("PS_kensaku_T3_" + data[i]);
+                        }
+                    }
+                }
+                if (searchSeg["T5_"] != undefined) {
+                    var data = searchSeg["T5_"].ac_shuffle()
+                    for (i = 0; i < data.length; i++) {
+                        if (keywords.length < 20 && dsT5Master["PS_kensaku_T5_" + data[i]] == "true") {
+                            keywords.push("PS_kensaku_T5_" + data[i]);
+                        }
+                    }
+                }
+                if (searchSeg["T4_disciplines"] != undefined && searchSeg["T4_area"] != undefined) {
+                    var areas = searchSeg["T4_area"].ac_shuffle()
+                    var disciplines = searchSeg["T4_disciplines"].ac_shuffle()
+                    for (i = 0; i < areas.length; i++) {
+                        for (j = 0; j < disciplines.length; j++) {
+                            if (keywords.length < 20 && dsT4Master["PS_kensaku_T4_" + areas[i] + "x" + disciplines[j]] == "true") {
+                                keywords.push("PS_kensaku_T4_" + areas[i] + "x" + disciplines[j]);
+                            }
+                        }
+                    }
+                }
+
+	//console.log("ps_kensaku "+keywords.join(","));
+
+	}
+	} catch(e) {
+		console.log(e)
+	}
+    }
+    ruaid = ""
+    var ouid = this.readCookie("o_uid")
+    /*
+    if (isPC && window.navigator.userAgent != undefined && window.navigator.userAgent != null) {
+        if (window.navigator.userAgent.indexOf("Android") >= 0) {
+            ruaid = "&rua=ATablet"
+        } else if (window.navigator.userAgent.indexOf("iPad") >= 0) {
+            ruaid = "&rua=iTablet"
+        }
+    }else {
+        ruaid = ""
+    }
+    */
+
+    var withoutDuplicateCampaign = isWithoutDuplicateCampaign ? '&isWithoutDuplicateCampaign=true' : ''
+
+    url = ""
+    if (isSSL == false) {
+        if (keyword == "PS_kensaku") {
+            url = 'http://obunshaad.durasite.net/A-affiliate2/multiMobile?max=' + num + '&ruid=' + ouid + '&site=130&keywords=' + keywords.join(",") + '&isJS=false&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + withoutDuplicateCampaign + ruaid + '&ord=' + noCacheParam;
+        } else {
+            url = 'http://obunshaad.durasite.net/A-affiliate2/multiMobile?max=' + num + '&ruid=' + ouid + '&site=129&keyword=' + keyword + '&isJS=false&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + withoutDuplicateCampaign + ruaid + '&ord=' + noCacheParam;
+        }
+    } else {
+        if (keyword == "PS_kensaku") {
+            url = 'https://obunshaad.durasite.net/A-affiliate2/multiMobile?max=' + num + '&ruid=' + ouid + '&site=130&keywords=' + keywords.join(",") + '&isJS=false&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + withoutDuplicateCampaign + ruaid + '&ord=' + noCacheParam;
+        } else {
+            url = 'https://obunshaad.durasite.net/A-affiliate2/multiMobile?max=' + num + '&ruid=' + ouid + '&site=129&keyword=' + keyword + '&isJS=false&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + withoutDuplicateCampaign + ruaid + '&ord=' + noCacheParam;
+        }
+    }
+
+    var successFunc = function (msg) {};
+
+    if(isAppendElements){
+        successFunc = function (msg) {
+            var segments = msg.split("\t")
+            for (var i = 0; i < segments.length - 1; i++) {
+                var targetId = "#" + keyword + "_" + i
+                targetId = targetId.replace(/\./g, "\\.")
+                targetId = targetId.replace(/:/g, "\\:")
+                $(targetId).html(segments[i]);
+            }
+        }
+    }
+
+    return $.ajax({
+        url: url,
+        type: "get",
+        success: successFunc
+    }).then(function(msg){
+        var segments = msg.split("\t")
+        return segments.slice(0, segments.length-1)
+    }).promise();
+}
+DuraSegmentMap.prototype.callDuraADWithTargetting = function (keyword, optRate, isRandomPickup) {
+
+    var randomPickupStr = isRandomPickup === false ? "" : "&randomPickup=1";
+
+    // optRateに応じて広告を出す　（レートを下回った場合は広告そのものを出さない) 省略した場合は100%
+    var rate = optRate === undefined ? 100 : optRate
+    var random = Math.floor(Math.random() * 100);
+    if (random >= rate) {
+        return;
+    }
+
+    this.sessionTargetting()
+    var isSSL = document.location.protocol == "https:"
+    var segmentStr = this.readCookie("__duraSegments")
+    var segments = undefined
+    var sessionTargetting = this.readCookie("__dura_sessionTargets2")
+    var ruid = this.readCookie("__duraid").replaceAll("\"","")
+    var kuidParam = ""
+    if (ruid === undefined || ruid == null || ruid == "") {
+        kuidParam = ""
+    } else {
+        kuidParam = "&kuid=" + ruid
+    }
+
+    try {
+        //console.log(segmentStr)
+        if (segmentStr != "") {
+            segments = JSON.parse(segmentStr)
+        } else {
+            segments = []
+        }
+        //console.log("segment="+ JSON.stringify(segments))
+        //console.log("s_segment="+ sessionTargetting)
+        if (sessionTargetting != "") {
+            s_segments = JSON.parse(sessionTargetting)
+            //console.log("s_segment2="+ s_segments)
+            segments = segments.concat(s_segments)
+            //console.log("segment="+ JSON.stringify(segments))
+        }
+    } catch (e) {
+
+        segments = undefined
+    }
+    var targettingParam = encodeURIComponent(this.toDuraTargetParam(segments))
+    var ksegParam = encodeURIComponent(this.toKsegments(segments))
+
+    noCacheParam = Math.random() * 10000000000;
+    ruaid = ""
+    var ouid = this.readCookie("o_uid")
+
+    /*
+    if (isPC && window.navigator.userAgent != undefined && window.navigator.userAgent != null) {
+        if (window.navigator.userAgent.indexOf("Android") >= 0) {
+            ruaid = "&rua=ATablet"
+        } else if (window.navigator.userAgent.indexOf("iPad") >= 0) {
+            ruaid = "&rua=iTablet"
+        }
+    }else {
+        ruaid = ""
+    }
+    */
+    if (isSSL == false) {
+        document.write('<scr' + 'ipt type="text/javascript" src="http://obunshaad.durasite.net/A-affiliate2/mobile?site=129&ruid=' + ouid + randomPickupStr + '&keyword=' + keyword + '&isJS=true&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + ruaid + '&ord=' + noCacheParam + '"></scr' + 'ipt>');
+    } else {
+        document.write('<scr' + 'ipt type="text/javascript" src="https://obunshaad.durasite.net/A-affiliate2/mobile?site=129&ruid=' + ouid + randomPickupStr + '&keyword=' + keyword + '&isJS=true&encoding=UTF-8&target=' + targettingParam + kuidParam + "&ksegments=" + ksegParam + ruaid + '&ord=' + noCacheParam + '"></scr' + 'ipt>');
+    }
+}
+
+DuraSegmentMap.prototype.toDuraTargetParam = function (segments) {
+    //if (segments === undefined || segments.length == 0) return ""
+    var eachSeg = new Array()
+    var allSegments = new Array()
+    if (segments === undefined) segments = new Array();
+    for (i = 0; i < segments.length; i++) {
+        //eachSeg.push("\"" + segments[i] + "\": [\"1\"]")
+        allSegments.push("\"" + segments[i] + "\"")
+    }
+    // 検索ターゲッティング
+    /* // 検索ターゲッティングは広告枠扱いになったので削除
+     var searchSeg = this.readCookie("__duraSearchSeg")
+     if (searchSeg == ""){
+     searchSeg = "{}"
+     }
+     searchTargettings = JSON.parse(searchSeg)
+     console.log(this.readCookie("__duraSearchSeg"));
+
+     if (searchTargettings !== undefined && searchTargettings !=  "") {
+     for (var key in searchTargettings){
+     console.log(key)
+     eachSeg.push("\""+key+"\": " + JSON.stringify(searchTargettings[key]))
+     console.log(JSON.stringify(eachSeg))
+     }
+     }
+     */
+    //if (userArea !== undefined && userArea != ""){
+
+    // 18学部分類ターゲッティング
+    var bunruiSession = this.maxBunrui()
+    if (typeof bunruiSession != "undefined"){
+        //console.log("\"ss_bunrui\": [\"" + bunruiSession + "\"]")
+        eachSeg.push("\"ss_bunrui\": [\"" + bunruiSession + "\"]")
+    }
+
+
+    if (typeof userArea === 'undefined') userArea = "";
+    if (userArea && userArea != "") {
+        //console.log("userArea is " + userArea);
+        eachSeg.push("\"userArea\": [\"" + userArea + "\"]")
+    }
+
+    // 大学所在地ターゲッティング
+    var dcode = String(this.parseDcode())
+
+    if (typeof dsUnivAreaMap !== 'undefined' && dcode != "" && dsUnivAreaMap["D" + dcode] !== undefined) {
+        var univArea = String(dsUnivAreaMap["D" + dcode])
+        eachSeg.push("\"univArea\": [\"" + univArea + "\"]")
+    }
+
+    // 大学別ページでは大学ターゲッティングパラメータを付与する
+    // 大学コードには頭にDを付与する
+    if (this.parseDcode() != "") {
+        eachSeg.push("\"dcode\": [\"D" + this.parseDcode() + "\"]")
+    }
+    if (typeof allSegments === 'undefined') allSegments = [];
+    return "{\"seg\": [ " + allSegments.join(",") + "], " + eachSeg.join(",") + "}"
+}
+
+DuraSegmentMap.prototype.toKsegments = function (segments) {
+    // segments配列が未定義か 空の場合空文字とする
+    if (segments === undefined || segments.length == 0) return ""
+    var eachSeg = new Array()
+    var allSegments = new Array()
+    for (i = 0; i < segments.length; i++) {
+        eachSeg.push("\"" + segments[i] + "\": [\"1\"]")
+        allSegments.push(segments[i])
+    }
+    return allSegments.join(",")
+}
+
+/**
+ * セグメントの更新期間が8時間未満だったら trueを返す
+ * 未定義等は falseを返す
+ * @param kastUpdatedAt
+ * @param currentTime_opt : new Date().getTime()の値（単体テスト用） : オプショナル引数
+ */
+DuraSegmentMap.prototype.isInformationFresh = function (lastUpdatedAt, currentTime_opt) {
+    var currentTime = (currentTime_opt / 1000) || (new Date().getTime() / 1000)
+
+    if (lastUpdatedAt == undefined || lastUpdatedAt == null || lastUpdatedAt == "") {
+        return false
+    }
+
+    var updateTimeBySec = (parseInt(lastUpdatedAt) / 1000)
+
+    if (currentTime - updateTimeBySec < 0) {
+        return false
+    }
+
+    if (currentTime - updateTimeBySec < (60 * 8)) {
+        return true
+    }
+    return false
+}
+
+DuraSegmentMap.prototype.sendUidEduInfo = function () {
+    var uid = this.readCookie("__duraid").replaceAll("\"","")
+    var d = document, js = d.createElement('script'),
+        el = d.getElementsByTagName('script')[0];
+    js.async = true;
+    js.src = "//consumer-api.edu-info.jp/getGroupByUid?domain=edu-info.jp&uid=" + uid;
+    el.parentNode.insertBefore(js, el);
+}
+
+DuraSegmentMap.prototype.sendBeacon = function () {
+    var uid = this.readCookie("__duraid").replaceAll("\"","")
+    var lastUpdatedAt = this.readCookie("__duraSegUpdatedTime")
+
+
+    // uidが発行されていないユーザは問い合わせない
+    if (uid == undefined || uid == null || uid == "") {
+        return;
+    }
+
+    //     書き込み日時が8時間以内だったら問い合わせない
+    if (this.isInformationFresh(lastUpdatedAt)) {
+        return;
+    }
+
+    /*
+     __aseg のcookieを確認
+     書き込み日時が8時間以内だったら問い合わせない
+     */
+
+
+    var d = document, js = d.createElement('script'),
+        el = d.getElementsByTagName('script')[0];
+    js.async = true;
+    js.src = "//consumer-api-dot-accelia-dsdmp.appspot.com/getGroupByUid?uid=" + uid;
+    el.parentNode.insertBefore(js, el);
+}
+
+DuraSegmentMap.prototype.parseDcode = function () {
+    var url = String(location.href)
+    if (url.indexOf("search_univ") >= 0 && url.indexOf("index") < 0 && url.indexOf("search_univ/?") < 0) {
+        var dcode = url.replace(/^.*?search_univ\//, "").replace(/\/.*$/, "")
+        if (dcode.match(/^[0-9]+$/)) {
+            //console.log("dcode=" + dcode)
+            return dcode
+        } else {
+            return "";
+        }
+    } else {
+        return "";
+    }
+}
+
+DuraSegmentMap.prototype.readCookie = function (key) {
+    var sCookie = document.cookie;
+    var aData = sCookie.split(";");
+    var oExp = new RegExp(" ", "g");
+    key = key.replace(oExp, "");
+
+
+    var i = 0;
+    while (aData[i]) {
+        var aWord = aData[i].split("=");
+        aWord[0] = aWord[0].replace(oExp, "");
+        if (key == aWord[0]) {
+            if (unescape(aWord[1]) != "0000000000000000000000000000000000000000000000000000000000000000" &&
+                unescape(aWord[1]).match(/^[-_\.0-9a-zA-Z]+$/)) {
+                return unescape(aWord[1]);
+            } else {
+                return aWord[1];
+            }
+        }
+        if (++i >= aData.length) break;
+    }
+    return "";
+}
+
+
+
+var duraSegmentMap = new DuraSegmentMap()
+var url = String(location.href)
+
+// 検索後すぐの画面で検索情報ターゲッティングを行う
+try {
+    if (url.indexOf("/search_univ/index.html") >= 0) {
+        if (isCheckPublicUniv()) {
+            if (isCheckPrivateUniv()) {
+                // "通常の大学検索"
+                privateUnivJudgement()
+            } else {
+                publicUnivJudgement()
+                //国公立大学検索を使用
+            }
+
+        } else {
+            // "通常の大学検索"
+            privateUnivJudgement()
+        }
+    }
+} catch (e) {
+    console.log(e)
+
+}
+
+function isCheckAcademicDisciplines() {
+    var queryParams = getParameterByName('sub_group_id');
+    return queryParams !== undefined && queryParams != ""
+}
+function isCheckPrivateUniv() {
+    var queryParams = getParameterByName('founder_flg');
+    return queryParams.indexOf("3") >= 0
+}
+function isCheckPublicUniv() {
+    var queryParams = getParameterByName('founder_flg');
+    return queryParams.indexOf("1") >= 0 || queryParams.indexOf("2") >= 0
+}
+
+function isCheckArea() {
+    try {
+        var queryParams = getParameterByName('prefecture_id');
+        return queryParams != ""
+    } catch (e) {
+    }
+    return false
+}
+function publicUnivJudgement() {
+    if (isCheckArea()) {
+        var areas = getParameterByName('prefecture_id').split(",")
+        var tmp = JSON.stringify({"T2_": areas})
+        duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+
+        //console.log("国公立大学検索のうち該当都道府県への出稿から抽選@T2" + tmp)
+    } else {
+
+        var tmp = JSON.stringify({"T1_": ["1"]})
+        duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+        //console.log(" 国公立大学検索全出稿から抽選@T1" + tmp)
+
+    }
+
+}
+
+function privateUnivJudgement() {
+    if (isCheckArea()) {
+        if (isCheckAcademicDisciplines()) {
+            var areas = getParameterByName('prefecture_id').split(",")
+            var disciplines = getParameterByName('sub_group_id').split(",");
+
+            var tmp = JSON.stringify({"T4_area": areas, "T4_disciplines": disciplines})
+            duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+            //console.log(" 大学検索該当の都道府県×学問分野への出稿から抽選@T4" + tmp)
+        } else {
+            var areas = getParameterByName('prefecture_id').split(",")
+
+            var tmp = JSON.stringify({"T3_": areas})
+            duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+
+            //console.log(" 大学検索該当の都道府県を含む出稿から抽選@T3" + tmp)
+        }
+    } else {
+        if (isCheckAcademicDisciplines()) {
+            var disciplines = getParameterByName('sub_group_id').split(",");
+
+            var tmp = JSON.stringify({"T5_": disciplines})
+            duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+
+
+            //console.log("大学検索該当の学問分野を含む出稿から抽選@T5" + tmp)
+        } else {
+            var tmp = JSON.stringify({"T6_": ["1"]})
+            duraSegmentMap.writeCookie("__duraSearchSeg", tmp, 90)
+            //console.log("大学検索全出稿から抽選@T6" + tmp)
+        }
+
+    }
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+duraSegmentMap.sendBeacon()
+duraSegmentMap.sessionTargetting()
+duraSegmentMap.gakubuTargetting()
+duraSegmentMap.sendUidEduInfo()
+duraSegmentMap.bunruiSessionTargetting()

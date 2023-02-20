@@ -1,0 +1,200 @@
+var DuraDmp = function () {
+    this.params = []
+    this.isNewUser = false
+    
+}
+DuraDmp.prototype.urlOfLogger = function () {
+    return ('https:' == document.location.protocol ? 'https://' : 'http://') + 'consumer-api.durasite.net/bq_load';
+    //return ('https:' == document.location.protocol ? 'https://' : 'http://') + 'consumer-api-dot-accelia-dsdmp.appspot.com/bq_load';
+}
+DuraDmp.TrackingParam = function (paramObj) {
+    this.paramObj = paramObj;
+}
+
+DuraDmp.prototype.readCookie = function (key) {
+    var sCookie = document.cookie;
+    var aData = sCookie.split(";");
+    var oExp = new RegExp(" ", "g");
+    var key = key.replace(oExp, "");
+
+    var i = 0;
+    while (aData[i]) {
+        var aWord = aData[i].split("=");
+        aWord[0] = aWord[0].replace(oExp, "");
+        if (key == aWord[0]) {
+            if(unescape(aWord[1]) != "0000000000000000000000000000000000000000000000000000000000000000" &&
+                unescape(aWord[1]).match(/^[-_\.0-9a-zA-Z]+$/)){
+                return unescape(aWord[1]);
+            }else{
+                return aWord[1];
+            }
+        }
+        if (++i >= aData.length) break;
+    }
+    return "";
+}
+
+DuraDmp.TrackingParam.prototype.getEncodedValue = function (key) {
+    if (typeof(this.paramObj[key]) == "undefined") {
+        return "";
+    } else {
+        return encodeURIComponent(this.paramObj[key]);
+    }
+}
+
+DuraDmp.prototype.sendBeacon = function (url) {
+    var d = document, js = d.createElement('script'),
+        el = d.getElementsByTagName('script')[0];
+    js.async = true;
+    js.type = "text/javascript";
+    js.src = url;
+    el.parentNode.insertBefore(js, el);
+}
+
+DuraDmp.prototype.writeCookie = function (name, value, expireDay) {
+    // webmoshiで _duraidと__duraidが間違っているので こちらで吸収
+    if(name=="_duraid"){
+       name="__duraid";
+    }
+    var d = new Date()
+    d.setTime(new Date().getTime() + expireDay * 24 * 3600 * 1000)
+    var expireDate = d.toGMTString()
+    document.cookie = name + "=" + value + ";expires=" + expireDate + ";path=/; Secure; SameSite=None;";
+}
+
+DuraDmp.prototype.writeCookieWithDomain = function (name, value, expireDay,domain) {
+   var d = new Date()
+   d.setTime(new Date().getTime() + expireDay * 24 * 3600 * 1000)
+   var expireDate = d.toGMTString()
+   var body = name + "=" + value + ";expires=" + expireDate + ";path=/; Secure; SameSite=None;";
+   domain ? body = body + ";domain=" + domain : body
+   document.cookie = body
+}
+
+DuraDmp.prototype.generateUid = function () {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+    return uuid;
+}
+DuraDmp.prototype.sendSecondBeacon = function(url) {/*
+    aqObject.aqid = "GKGH43PP3EZ3B565UPVA";
+    var encodedUrl = url
+    aqObject.tag("pnaviTrack",encodedUrl);
+    aqObject.jsload("t10.aqtracker.com/asp/aq_tag_aos.js");
+    */
+}
+DuraDmp.prototype.tracking = function () {
+    var cid = this.readCookie("__csmid");
+    var did = this.readCookie("__duraid")
+    var bid = this.readCookie("__bid")
+    var ouid = this.readCookie("o_uid")
+    if (did.indexOf("\"") >= 0) {
+        did =  did.replaceAll("\"","")
+        this.writeCookieWithDomain("__duraid", did, 90, "evidus.com")
+    }
+    if (ouid.indexOf("\"") >= 0) {
+        ouid =  ouid.replaceAll("\"","")
+        this.writeCookieWithDomain("o_uid", ouid, 90, "evidus.com")
+    }
+    // if o_uid exists update cookie
+    if (ouid != ""){
+        this.writeCookieWithDomain("o_uid", ouid, 90, "evidus.com")
+    }
+    if (bid != "" && did == ""){
+        did = bid
+        cid = bid
+
+    }
+    if (did != ""){
+        this.writeCookie("__bid", did, 270)
+        if (ouid == ""){
+	    this.writeCookieWithDomain("o_uid", did, 90, "evidus.com")
+            ouid = did
+        }
+        this.writeCookie("__duraid", did, 90)
+    }
+
+    if (did == "" && cid != "") {
+        did = cid
+        this.writeCookie("__duraid", cid, 90)
+        if(ouid == ""){
+	    this.writeCookieWithDomain("o_uid", cid, 90, "evidus.com")
+            ouid = cid;
+        }
+        this.writeCookie("__bid", did, 270)
+    }
+    if (did != undefined && did != null && did != "" && cid != did) {
+        cid = did
+    }
+    if (ouid != "" && cid == "" ){
+       cid = ouid
+       did = ouid
+       bid = ouid
+       this.writeCookie("__bid", did, 270)
+       this.writeCookie("__duraid", did, 90)
+    }
+    var cookie_tda_id = this.readCookie("__caid2");
+    if (cid == null || cid == "") {
+        cid = this.generateUid()
+        this.writeCookie("__duraid", cid, 90)
+	this.writeCookieWithDomain("o_uid", cid, 90, "evidus.com")
+        this.writeCookie("__bid", cid, 270)
+        this.isNewUser = true
+    }
+
+
+    if (navigator.userAgent.indexOf("MSIE") != -1) {
+        var lan = navigator.browserLanguage;
+    } else {
+        var lan = navigator.language;
+    }
+
+    for (i = 0; i < this.params.length; i++) {
+        var param = new DuraDmp.TrackingParam(this.params[i])
+
+        this.beacon_url = this.urlOfLogger();
+        this.beacon_url += "?ID=" + cid;
+        this.beacon_url += "&PID=" + param.getEncodedValue("partner_id");
+        this.beacon_url += "&PUID=" + param.getEncodedValue("partner_site_id");
+        this.beacon_url += "&C=" + ouid;
+        this.beacon_url += "&T=" + encodeURIComponent(document.title);
+        this.beacon_url += "&L=" + lan;
+        this.beacon_url += "&H=" + encodeURIComponent(location.hostname);
+        this.beacon_url += "&P=" + encodeURIComponent(location.href);
+        this.beacon_url += "&LID=" + param.getEncodedValue("link_id");
+        this.beacon_url += "&ACT=" + param.getEncodedValue("action_data");
+        this.beacon_url += "&ITM=" + param.getEncodedValue("item_id");
+        this.beacon_url += ('referrer' in document) ? "&R=" + encodeURIComponent(document.referrer) : "";
+
+        this.beacon_url += "&V=20140711";
+        this.beacon_url += "&RND=555c7373e4e73";
+	if (this.isNewUser){
+		 this.beacon_url += "&isNewUser=true";
+	}
+	this.beacon_url += "&CT=" + (new Date().getTime());
+
+        this.sendBeacon(this.beacon_url);
+    }
+}
+
+DuraDmp.prototype.addParams = function (params) {
+    this.params = params.concat()
+}
+
+
+// MAIN
+var duradmp = new DuraDmp()
+
+// _cosmi_params => _dura_params の値を DuraDMPに渡す
+if (typeof _dura_params !== "undefined") {
+    duradmp.addParams(_dura_params);
+    _dura_params = [];
+}
+
+
+duradmp.tracking()
+duradmp.sendBeacon("//ala.durasite.net/DuraUidSegmentMap.js")
